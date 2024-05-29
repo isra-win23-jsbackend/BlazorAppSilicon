@@ -1070,9 +1070,11 @@ footer {
 /*---------------------------------------------------
 SavedCourses?*/
 
-.details{
-    display:flex;
-    gap:90px;
+.details {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;   
+ 
 }
 
 

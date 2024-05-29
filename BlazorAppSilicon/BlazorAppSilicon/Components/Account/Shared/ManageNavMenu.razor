@@ -1,8 +1,149 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using BlazorAppSilicon.Data
 
+<div class="details container">
+    <div class="profile">
+        <div class="min-profil">
+            <div class="profil-avatar">
+                <div class="avatar-container">
+                    <a href="/account/details">
+                        <img src="@user.ProfilImage" alt="@user.FirstName @user.LastName" />
+                    </a>
+                </div>
+
+                <EditForm Model="@user" OnValidSubmit="HandleProfileUpload">
+                    <InputFile id="UploadFile" OnChange="HandleFileSelected" hidden />
+                    <label for="UploadFile" class="btn btn-circle btn-circle-sm">
+                        <i class="fa-regular fa-refresh"></i>
+                    </label>
+                </EditForm>
+            </div>
+            <div>
+                <h5>@user.FirstName @user.LastName</h5>
+                <p>@user.Email</p>
+            </div>
+        </div>
+    </div>
+    <div class="infoDetails">
+
+
+        <div class="controllers">
+            <NavLink class="btn-trans" href="/account/details">
+                <img src="images/bx-cog.svg" alt="">
+                <span class="btn-text">Account Details</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/Account/Manage/Security">
+                <img src="images/bx-lock-alt.svg" alt="">
+                <span class="btn-text">Security</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/notifications">
+                <img src="images/Campana.svg" alt="">
+                <span class="btn-text">Notifications</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/chat">
+                <img src="images/bx-chat.svg" alt="">
+                <span class="btn-text">Messages</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/savedcourses">
+                <img src="images/savedcourse.svg" alt="">
+                <span class="btn-text">Saved Courses</span>
+            </NavLink>
+             <Authorized>            
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                       
+                        <input type="hidden" name="ReturnUrl" @* value="@currentUrl *@" />
+                   
+                        <a href="" class="btn-trans"><i class="fa-sharp fa-regular fa-arrow-left-from-bracket"></i><span>Sign out</span></a>
+                    </form>
+                </div>
+            </Authorized>
+           
+        </div>
+    </div>
+</div>
+
+@code {
+    private ApplicationUser user = new ApplicationUser();
+    private IBrowserFile selectedFile;
+
+    private async Task HandleProfileUpload()
+    {
+        if (selectedFile != null)
+        {
+            var imageUrl = await UploadImageToApi(selectedFile);
+            if (imageUrl != null)
+            {
+                user.ProfilImage = imageUrl;
+                await UpdateUserAsync(user);
+                StateHasChanged();
+            }
+            else
+            {
+                // Handle error
+            }
+        }
+    }
+
+    private async Task<string> UploadImageToApi(IBrowserFile file)
+    {
+        var apiUrl = "http://localhost:7031/api/Upload?containerName=profiles";
+        var formData = new MultipartFormDataContent();
+        formData.Add(new StreamContent(file.OpenReadStream()), "file", file.Name);
+
+        using var response = await Http.PostAsync(apiUrl, formData);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            return result;
+        }
+        else
+        {
+            // Handle error
+            return null;
+        }
+    }
+
+    private async Task UpdateUserAsync(ApplicationUser user)
+    {
+        await UserManager.UpdateAsync(user);
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @using Microsoft.AspNetCore.Identity
+@using BlazorAppSilicon.Data
+
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
+
 @rendermode InteractiveAuto
 
 
@@ -71,7 +212,7 @@
         NavigationManager.NavigateTo("/");
     }
 }
-
+ *@
 
 
 @* 

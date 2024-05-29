@@ -1,16 +1,7 @@
-﻿
-@attribute [StreamRendering]
-@inject UserManager UserManager
-
-@using System.Net.Http.Headers
+﻿@using System.Net.Http.Headers
 @using BlazorAppSilicon.Services
 
-@if (user == null)
-{
-    <p>Loading...</p>
-}
-else
-{
+
     <div class="min-profil">
         <div class="profil-avatar">
             <div class="avatar-container">
@@ -31,15 +22,17 @@ else
             <p>@user.Email</p>
         </div>
     </div>
-}
+
 
 @code {
 
-    private ApplicationUser user = new ApplicationUser();
+ 
     private MultipartFormDataContent uploadModel = new MultipartFormDataContent();
     private IBrowserFile? selectedFile;
 
-    [CascadingParameter]
+    private ApplicationUser user = new ApplicationUser();
+
+  
     private HttpContext HttpContext { get; set; } = default!;
 
 

@@ -1,4 +1,4 @@
-﻿@using System.ComponentModel.DataAnnotations
+﻿@* @using System.ComponentModel.DataAnnotations
 @using BlazorAppSilicon.Services
 @using Microsoft.AspNetCore.Identity
 @using BlazorAppSilicon.Data
@@ -11,12 +11,6 @@
 <h3>Profile</h3>
 <StatusMessage />
 
-@if (user == null)
-{
-    <p>Loading...</p>
-}
-else
-{
     <div>
         <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync">
             <DataAnnotationsValidator />
@@ -49,9 +43,8 @@ else
         </EditForm>
     </div>
 }
-
 @code {
-    private ApplicationUser? user;
+    private ApplicationUser? user = null!;
     private string? phoneNumber;
 
     private InputModel Input { get; set; } = new();
@@ -59,7 +52,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity.IsAuthenticated)
+        if (authState.User.Identity!.IsAuthenticated)
         {
             user = await UserManager.GetUserAsync(authState.User);
             if (user != null)
@@ -70,7 +63,7 @@ else
                 Input.LastName = user.LastName;
                 Input.Email = user.Email ?? string.Empty;
                 Input.Phone = phoneNumber ?? string.Empty;
-                Input.Bio = user.Biography?? string.Empty;
+                Input.Bio = user.Biography ?? string.Empty;
             }
         }
     }
@@ -107,6 +100,44 @@ else
         RedirectManager.NavigateTo("/profile?status=updated");
     }
 
+    private async Task SaveProfileAsync()
+    {
+        if (user == null)
+        {
+            RedirectManager.NavigateTo("/error");
+            return;
+        }
+
+        // Update user properties with edited values
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        user.Biography = Input.Bio;
+
+        // Set the phone number if it has been provided by the user
+        if (!string.IsNullOrEmpty(Input.Phone))
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.Phone);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.NavigateTo("/error?message=Failed to set phone number.");
+                return;
+            }
+        }
+
+        // Save changes to the user profile
+        var updateResult = await UserManager.UpdateAsync(user);
+        if (updateResult.Succeeded)
+        {
+            // Redirect to profile page with success message
+            RedirectManager.NavigateTo("/profile?status=updated");
+        }
+        else
+        {
+            // Redirect to error page with failure message
+            RedirectManager.NavigateTo("/error?message=Failed to update user profile.");
+        }
+    }
+
     private sealed class InputModel
     {
         [Required]
@@ -122,6 +153,7 @@ else
         public string Bio { get; set; } = string.Empty;
     }
 }
+ *@
 
 
 

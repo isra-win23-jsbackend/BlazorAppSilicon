@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using BlazorAppSilicon.Data;
 
 
-namespace TokenProviderInfrastructure.Data.Contexts;
+namespace BlazorAppSilicon.Factories;
 
 public class DataContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {

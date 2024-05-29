@@ -22,10 +22,6 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<UserManager>();
-
-// Add UserService to DI container
-builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
 // Configure authentication with Identity and external providers
 builder.Services.AddAuthentication(options =>
@@ -47,21 +43,11 @@ builder.Services.AddAuthentication()
         options.ClientSecret = builder.Configuration["GoogleClientSecret"]!;
     });
 
-//Configure Entity Framework with SQL Server
-//var connectionString = builder.Configuration.GetConnectionString("Sql") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseSqlServer(connectionString));
-//builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-
-
+// Configure Entity Framework with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("SqlServer") ?? throw new InvalidOperationException("Connection string 'SqlServer' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString),
     ServiceLifetime.Transient);
-
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -72,6 +58,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
 builder.Services.AddScoped<IUserAccessor, UserAccessor>();
+
 
 // Configure email sender service
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();

@@ -6,7 +6,6 @@
 
 <PageTitle>Courses</PageTitle>
 
-
 <section class="coursesList">
     <div class="container">
         <div class="homeIcon">
@@ -23,8 +22,133 @@
                     <div class="selected">All Categories</div>
                     <div class="select-options">
                         <select class="option" data-value="all">All Categories</select>
-               
-                    </div> 
+                    </div>
+                    <div class="input-search-group">
+                        <input id="searchQuery" name="searchQuery" type="text" placeholder="Search courses">
+                        <i class="fa-regular fa-search"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="items">
+            @if (courses == null)
+            {
+                <p><em>No Course found yet. Please wait...</em></p>
+            }
+            else
+            {
+                @foreach (var item in courses)
+                {
+                    <div class="cardCourses">
+                        @if (item.IsBestSeller)
+                        {
+                            <img class="bestSeller" src="/Images/badge.png" alt="" />
+                        }
+
+                        <img class="cardImage" src="/Images/@item.ImageName" alt="" />
+
+                        <form method="post">
+                            <input type="hidden" name="courseId" value="@item.Id" />
+                            <button class="courseIcon" type="submit"><img src="/Images/S.svg" alt="" /></button>
+                        </form>
+
+                        <div class="cardText">
+                            <a href="">
+                                <h5>@item.Title</h5>
+                            </a>
+                            <p class="text-s">@item.Author</p>
+                            @if (item.Discount > 0)
+                            {
+                                <span class="red">$@item.Price</span>
+                                <span class="gray">$@item.Discount</span>
+                            }
+                            else
+                            {
+                                <span class="blue">$@item.Price</span>
+                            }
+                            <hr />
+                            <div class="watch">
+                                <div class="hours">
+                                    <p class="text-s"><i class="fa-regular fa-clock"></i> @item.Hours hours</p>
+                                </div>
+                                <div class="likes">
+                                    <img src="/Images/like.svg" alt="" />
+                                    <span>@($"{item.LikesNumbers}%")</span>
+                                    <span class="text-s">(@($"{item.LikesProcent}k"))</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+
+    private CourseModel[]? courses;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            courses = await Http.GetFromJsonAsync<CourseModel[]>("http://localhost:7047/api/playground");
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"Request error: {httpEx.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+    }
+
+
+    private class CourseModel
+    {
+        public string Id { get; set; } = null!;
+        public string Title { get; set; } = null!;
+        public string? Author { get; set; }
+        public string? ImageName { get; set; }
+        public decimal Price { get; set; }
+        public decimal Discount { get; set; }
+        public int Hours { get; set; }
+        public bool IsBestSeller { get; set; }
+        public bool IsDigital { get; set; }
+        public string? LikesNumbers { get; set; }
+        public string? LikesProcent { get; set; }
+        public string? BigImageUrl { get; set; }
+        public string Category { get; set; } = null!;
+
+    }
+
+}
+
+
+
+
+        @*
+<section class="coursesList">
+    <div class="container">
+        <div class="homeIcon">
+            <img src="/Images/homeIcon.svg" alt="">
+            <h4 class="h6gray">Home</h4>
+            <img src="/Images/rightArrow.svg" alt="">
+            <h4 class="blue">Courses</h4>
+        </div>
+        <div class="courses">
+            <h1>Courses</h1>
+
+            <form class="filters">
+                <div class="select">
+                    <div class="selected">All Categories</div>
+                    <div class="select-options">
+                        <select class="option" data-value="all">All Categories</select>
+
+                    </div>
                     <div class="input-search-group">
                         <input id="searchQuery" name="searchQuery" type="text" placeholder="Search courses">
                         <i class="fa-regular fa-search"></i>
@@ -96,7 +220,7 @@
                         </div>
                     </div>
                 }
-            }       
+            }
 
         </div>
     </div>
@@ -104,45 +228,4 @@
 
 </section>
 
-
-
-@code {
-
-    private CourseModel[]? courses;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            courses = await Http.GetFromJsonAsync<CourseModel[]>("http://localhost:7047/api/playground");
-        }
-        catch (HttpRequestException httpEx)
-        {
-            Console.WriteLine($"Request error: {httpEx.Message}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-        }
-    }
-
-
-    private class CourseModel
-    {
-        public string Id { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string? Author { get; set; }
-        public string? ImageName { get; set; }
-        public decimal Price { get; set; }
-        public decimal Discount { get; set; }
-        public int Hours { get; set; }
-        public bool IsBestSeller { get; set; }
-        public bool IsDigital { get; set; }
-        public string? LikesNumbers { get; set; }
-        public string? LikesProcent { get; set; }
-        public string? BigImageUrl { get; set; }
-        public string Category { get; set; } = null!;
-
-    }
-
-}
+ *@
