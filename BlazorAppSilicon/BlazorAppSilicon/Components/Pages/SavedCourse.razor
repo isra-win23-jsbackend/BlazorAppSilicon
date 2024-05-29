@@ -1,0 +1,117 @@
+﻿@page "/savedcourses"
+
+@using System.Collections.Generic
+
+<main class="container">
+    <section class="details">
+        <ManageNavMenu />
+
+        <div class="infoDetails">
+            <div class="deleteAll">
+                <h2>Saved Items</h2>
+                <button class="btn-delete" @onclick="DeleteAll">
+                    <img src="images/dust-bin.svg" alt="">Delete all
+                </button>
+            </div>
+
+            <div class="chosen-courses">
+                @foreach (var item in SavedCourses)
+                {
+                    <div class="courses-cards">
+                        @if (item.IsBestSeller)
+                        {
+                            <img class="bestSeller" src="~/Images/badge.png" alt="Best Seller">
+                        }
+                        <img class="cardImage" src="/Images/@item.ImageName" alt="Course Image">
+
+                        <button class="courseIcon" @onclick="() => DeleteCourse(item.Id)">
+                            <img src="Images/S.svg" alt="Delete">
+                        </button>
+
+                        <div class="cardText">
+                            <h5>@item.Title</h5>
+                            <p class="text-s">@item.Author</p>
+                            @if (item.Discount > 0)
+                            {
+                                <span class="red">$@item.Price</span>
+                                <span class="gray">$@item.Discount</span>
+                            }
+                            else
+                            {
+                                <span class="blue">$@item.Price</span>
+                            }
+                            <hr>
+                            <div class="watch">
+                                <div class="hours">
+                                    <p class="text-s"><i class="fa-regular fa-clock"></i> @item.Hours hours</p>
+                                </div>
+                                <div class="likes">
+                                    <img src="~/Images/like.svg" alt="Likes">
+                                    <span>@($"{item.LikesNumbers}%")</span>
+                                    <span class="text-s">(@($"{item.LikesProcent}k"))</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+</main>
+
+@code {
+    private List<SavedCourseModels> SavedCourses { get; set; } = new List<SavedCourseModels>
+    {
+        new SavedCourseModels
+        {
+            
+            Id = 1,
+            Title = "Course 1",
+            Author = "Author 1",
+            Price = 100,
+            Discount = 80,
+            Hours = 10,
+            LikesNumbers = 90,
+            LikesProcent = 4.5,
+            ImageName = "course1.jpg",
+            IsBestSeller = true
+        },
+        new SavedCourseModels
+        {
+            Id = 2,
+            Title = "Course 2",
+            Author = "Author 2",
+            Price = 200,
+            Discount = 0,
+            Hours = 20,
+            LikesNumbers = 85,
+            LikesProcent = 3.5,
+            ImageName = "course2.jpg",
+            IsBestSeller = false
+        }
+    };
+
+    private async Task DeleteAll()
+    {
+
+    }
+
+    private async Task DeleteCourse(int id)
+    {
+
+    }
+
+    public class SavedCourseModels
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+        public string Author { get; set; } = null!;
+        public double Price { get; set; }
+        public double Discount { get; set; }
+        public int Hours { get; set; }
+        public int LikesNumbers { get; set; }
+        public double LikesProcent { get; set; }
+        public string ImageName { get; set; } = null!;
+        public bool IsBestSeller { get; set; }
+    }
+}

@@ -1,0 +1,37 @@
+﻿@page "/Account/Manage/Security"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+
+@inject ILogger<Security> Logger
+
+<PageTitle>Security</PageTitle>
+
+@* <StatusMessage Message="@message" /> *@
+
+<div class="container details">
+    <ManageNavMenu />
+
+    <div class="infoDetails">
+        <h1>Security</h1>
+
+        <div class="createNewSecurity">
+            <h5 class="colorTitle">Change Password</h5>
+      <BlazorAppSilicon.Components.Account.Pages.Manage.ChangePassword />
+        </div>
+
+        <hr>
+
+      <BlazorAppSilicon.Components.Account.Pages.Manage.DeletePersonalData />
+    </div>
+</div>
+
+@code {
+   
+
+}

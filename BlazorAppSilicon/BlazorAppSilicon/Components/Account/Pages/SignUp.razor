@@ -1,0 +1,209 @@
+﻿@page "/signup"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using BlazorAppSilicon.Filters
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using BlazorAppSilicon.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<SignUp> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Sign Up</PageTitle>
+
+
+<section id="createAccount">
+    <div class="container">
+
+
+        <EditForm class="form" Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="signup" novalidate>
+
+            <DataAnnotationsValidator />
+
+           
+
+            <h1>Create Account</h1>
+            <p class="text-xs">Already have an acount? <a href="SignIn">Sign in here.</a></p>
+
+            <div class="klientInfo">
+                <div class="klientbox">
+                    <label><b>First name</b></label>
+                    <ValidationMessage For="() => Input.FirstName" />
+                    <InputText @bind-Value="Input.FirstName" class="input" autocomplete="givenname" aria-required="true" placeholder="Enter your first name" />
+                </div>
+                <div class="klientbox">
+                    <label><b>Last name</b></label>
+                    <ValidationMessage For="() => Input.LastName" />
+                    <InputText @bind-Value="Input.LastName" class="input" autocomplete="surname" aria-required="true" placeholder="Enter yourlast name" />
+                </div>
+            </div>
+            <div class="createBox">
+                <label><b>Email</b></label>
+                <ValidationMessage For="() => Input.Email" />
+                <InputText type="email" @bind-Value="Input.Email" class="input2" autocomplete="email" aria-required="true" placeholder="Enter your email" />
+            </div>
+            <div class="createBox">
+                <label><b>Confirm Password</b></label>
+                <ValidationMessage For="() => Input.Password" />
+                <InputText type="password" @bind-Value="Input.Password" class="input2" autocomplete="password" aria-required="true" placeholder="*****" />
+            </div>
+            <div class="createBox">
+                <label><b> Confirm Password</b></label>
+                <ValidationMessage For="() => Input.ConfirmPassword" />
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="input2" autocomplete="confirmpassword" aria-required="true" placeholder="*****" />
+            </div>
+
+            <div>
+                <InputCheckbox @bind-Value="Input.TermsConditions" autocomplete="terms" aria-required="true" />
+                <label>I agree to the Terms & Conditions.</label>
+
+            </div>
+            <ValidationMessage For="() => Input.TermsConditions" />
+
+            <button class="btn-theme" type="submit">Sign Up</button>
+
+        </EditForm>
+
+    </div>
+
+</section>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var user = CreateUser();
+
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+        Logger.LogInformation("User created a new account with password.");
+
+        // Iniciar sesión directamente al usuario
+        await SignInManager.SignInAsync(user, isPersistent: false);
+
+        // Redirigir al usuario a la página de inicio de sesión
+        RedirectManager.RedirectTo("SignIn");
+    }
+
+    // public async Task RegisterUser(EditContext editContext)
+    // {
+    //     var user = CreateUser();
+
+    //     user.FirstName = Input.FirstName;
+    //     user.LastName = Input.LastName;
+
+    //     await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+    //     var emailStore = GetEmailStore();
+    //     await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+    //     var result = await UserManager.CreateAsync(user, Input.Password);
+
+    //     if (!result.Succeeded)
+    //     {
+    //         identityErrors = result.Errors;
+    //         return;
+    //     }
+
+    //     Logger.LogInformation("User created a new account with password.");
+
+    //     var userId = await UserManager.GetUserIdAsync(user);
+    //     var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+    //     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+    //     var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+    //         NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+    //         new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+    //     await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+    //     if (UserManager.Options.SignIn.RequireConfirmedAccount)
+    //     {
+    //         RedirectManager.RedirectTo(
+    //             "Account/RegisterConfirmation",
+    //             new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+    //     }
+
+    //     await SignInManager.SignInAsync(user, isPersistent: false);
+    //     RedirectManager.RedirectTo(ReturnUrl);
+    // }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [StringLength(50, ErrorMessage = "The {0} must be at most {1} characters long.")]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        [StringLength(50, ErrorMessage = "The {0} must be at most {1} characters long.")]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = "";
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+
+        [Display(Name = "I agree to the Terms & Concitions", Order = 5)]
+        [Required(ErrorMessage = "You have to accept the Terms & Conditions")]
+        [CheckboxRequired(ErrorMessage = "You have to accept the Terms & Conditions to proceed,")]
+        public bool TermsConditions { get; set; } = false;
+    }
+}

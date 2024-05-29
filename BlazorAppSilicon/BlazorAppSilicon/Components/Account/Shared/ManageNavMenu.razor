@@ -1,0 +1,101 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using BlazorAppSilicon.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+@rendermode InteractiveAuto
+
+
+<div class="profile">
+     <BlazorAppSilicon.Components.Sections.ProfileAvatar />
+    <div class="infoDetails">
+        <div class="controllers">
+            <NavLink class="btn-trans" href="/account/details">
+                <img src="images/bx-cog.svg" alt="">
+                <span class="btn-text">Account Details</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/Account/Manage/Security">
+                <img src="images/bx-lock-alt.svg" alt="">
+                <span class="btn-text">Security</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/notifications">
+                <img src="images/Campana.svg" alt="">
+                <span class="btn-text">Notifications</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/chat">
+                <img src="images/bx-chat.svg" alt="">
+                <span class="btn-text">Messages</span>
+            </NavLink>
+            <NavLink class="btn-trans" href="/savedcourses">
+                <img src="images/savedcourse.svg" alt="">
+                <span class="btn-text">Saved Courses</span>
+            </NavLink>
+             <Authorized>            
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                       
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                   
+                        <a href="" class="btn-trans"><i class="fa-sharp fa-regular fa-arrow-left-from-bracket"></i><span>Sign out</span></a>
+                    </form>
+                </div>
+            </Authorized>
+           
+        </div>
+    </div>
+</div>
+@code {
+    private string? currentUrl;
+    private bool hasExternalLogins;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+    protected async Task HandleSignOut()
+    {
+        await SignInManager.SignOutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+}
+
+
+
+@* 
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage" Match="NavLinkMatch.All">Profile</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/Email">Email</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/ChangePassword">Password</NavLink>
+    </li>
+    @if (hasExternalLogins)
+    {
+        <li class="nav-item">
+            <NavLink class="nav-link" href="Account/Manage/ExternalLogins">External logins</NavLink>
+        </li>
+    }
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/TwoFactorAuthentication">Two-factor authentication</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/PersonalData">Personal data</NavLink>
+    </li>
+</ul>
+ *@

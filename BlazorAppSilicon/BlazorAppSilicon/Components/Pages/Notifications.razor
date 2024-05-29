@@ -1,0 +1,51 @@
+﻿@page "/notifications"
+
+
+<section class="container details">
+  
+    <ManageNavMenu />
+
+    <div class="infoDetails">    
+        
+            <div class="notifications">
+                <h1>Notifications</h1>
+
+                <div class="inputNotis">
+                    <label><b>Preferred email for notifications</b></label>
+                    <input type="text" placeholder="example@gmail.com" />
+                </div>  
+
+                <div class="btn-switch">                      
+                    <label for="switch-newsletter-1" class="switch">
+                        <input type="checkbox" id="switch-newsletter-1"  />
+                        <div class="slider round"></div>
+                    </label>
+                    <div class="toggleSubscribe">
+                        <h5>Subscribe to Newsletter</h5>
+                        <span>Nec, posuere non felis duis massa vitae aliquet interdum scelerisque. Neque ullamcorper.</span>    
+                    </div>
+                </div> 
+
+                <div class="btn-switch">                      
+                    <label for="switch-newsletter-2" class="switch">
+                        <input type="checkbox" id="switch-newsletter-2" />
+                        <div class="slider round"></div>
+                    </label>
+                    <div class="toggleSubscribe">
+                        <h5>Subscribe to Newsletter</h5>
+                        <span>Nec, posuere non felis duis massa vitae aliquet interdum scelerisque. Neque ullamcorper.</span>    
+                    </div>
+                </div> 
+            </div>              
+             
+            <div class="accountButton">
+                <button class="btn-gray" >Cancel</button>
+                <button class="btn-theme" >Save Changes</button>
+            </div>
+     </div>
+    
+</section>
+
+@code {
+
+}

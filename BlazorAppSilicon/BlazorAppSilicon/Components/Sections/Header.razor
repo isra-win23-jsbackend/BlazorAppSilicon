@@ -1,0 +1,52 @@
+﻿ @using System.Security.Claims
+@using BlazorAppSilicon.Data
+
+ @inject NavigationManager NavigationManager
+
+
+
+    <header>
+        <div class="container">         
+                <a id="logo" href=""><img src="Images/logo_silicon.svg" alt=""></a>
+          
+            <div id="menu">
+                <Nav>
+                    <NavLink href="" Match="NavLinkMatch.All" class="menu-link">Overview</NavLink>
+                    <NavLink href="/#features" class="menu-link">Features</NavLink>
+                    <AuthorizeView>
+                        <Authorized>
+                        <NavLink href="/Courses" class="menu-link">Courses</NavLink>
+                        </Authorized>
+                    </AuthorizeView>                   
+                    <NavLink href="/contact" class="menu-link">Contact</NavLink>
+                </Nav>
+            </div>
+            <AuthorizeView>
+                <Authorized>
+                <AntiforgeryToken />
+                <a href="/account/details">@* @user.ProfilImage *@ @context.User.FindFirst(ClaimTypes.Email)?.Value</a>
+                <a href="" class="btn-theme-s"><i class="fa-sharp fa-regular fa-arrow-right-from-bracket"></i><span style="color:#ffffff">Sign out</span></a>
+                </Authorized>  
+                <NotAuthorized>
+             
+                    <div class="account-buttons">
+                        <a href="SignIn" class="btn-gray"><i class="fa-regular fa-right-to-bracket"></i><span>Sign in</span></a>
+                        <a href="SignUp" class="btn-theme"><i class="fa-regular fa-user"></i><span>Sign up</span></a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+            
+               
+
+        </div>
+    </header>
+
+
+    @code{
+        private ApplicationUser user = new ApplicationUser();
+    }
+
+
+
+
+

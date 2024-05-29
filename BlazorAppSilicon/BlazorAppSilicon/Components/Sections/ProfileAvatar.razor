@@ -1,0 +1,112 @@
+﻿
+@attribute [StreamRendering]
+@inject UserManager UserManager
+
+@using System.Net.Http.Headers
+@using BlazorAppSilicon.Services
+
+@if (user == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="min-profil">
+        <div class="profil-avatar">
+            <div class="avatar-container">
+                <a href="/account/details">
+                    <img src="@user.ProfilImage" alt="@user.FirstName @user.LastName" />
+                </a>
+            </div>
+
+            <EditForm Model="@uploadModel" OnValidSubmit="HandleProfileUpload" Context="editContext">
+                <InputFile id="UploadFile" OnChange="HandleFileSelected" hidden />
+                <label for="UploadFile" class="btn btn-circle btn-circle-sm">
+                    <i class="fa-regular fa-refresh"></i>
+                </label>
+            </EditForm>
+        </div>
+        <div>
+            <h5>@user.FirstName @user.LastName</h5>
+            <p>@user.Email</p>
+        </div>
+    </div>
+}
+
+@code {
+
+    private ApplicationUser user = new ApplicationUser();
+    private MultipartFormDataContent uploadModel = new MultipartFormDataContent();
+    private IBrowserFile? selectedFile;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserDataAsync();
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task LoadUserDataAsync()
+    {
+        user = await UserManager.GetUserAsync(HttpContext!.User) ?? new ApplicationUser();
+        if (string.IsNullOrEmpty(user.ProfilImage))
+        {
+            user.ProfilImage = "/Images/avatar.svg";
+        }
+    }
+
+    private async Task HandleProfileUpload()
+    {
+        if (selectedFile != null)
+        {
+            var imageUrl = await UploadImageToApi(selectedFile);
+            if (imageUrl != null)
+            {
+             
+                user.ProfilImage = imageUrl;
+                await UpdateUserAsync(user);
+
+                StateHasChanged();
+            }
+            else
+            {
+                
+            }
+        }
+    }
+
+    private async Task<string> UploadImageToApi(IBrowserFile file)
+    {
+        var apiUrl = "http://localhost:7031/api/Upload?containerName=profiles";
+        var formData = new MultipartFormDataContent();
+        formData.Add(new StreamContent(file.OpenReadStream()), "file", file.Name);
+
+        using var response = await Http.PostAsync(apiUrl, formData);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            return result;
+        }
+        else
+        {
+           
+            return null!;
+        }
+    }
+
+    private async Task UpdateUserAsync(ApplicationUser user)
+    {
+       
+        await UserManager.UpdateAsync(user);
+    }
+
+    
+}
+

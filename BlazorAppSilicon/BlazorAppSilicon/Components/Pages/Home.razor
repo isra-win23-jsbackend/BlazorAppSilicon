@@ -1,0 +1,37 @@
+﻿@page "/"
+
+<div class="body ">
+    <div class="bodyAdmin container">
+
+
+        <div class="admin">
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="h8">
+                        <h1>Welcome back, @context.User.Identity!.Name</h1>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="h8">
+                        <h1>You are logged out. Please log in.</h1>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <div class="adminImg">
+
+                <img src="/Images/avatar1.svg" alt="" class="adminItem">
+                <img src="/Images/avatar2.svg" alt="" class="adminItem">
+                <img src="/Images/avatar3.svg" alt="" class="adminItem">
+                <img src="/Images/avatar4.svg" alt="" class="adminItem">
+                <img src="/Images/avatar5.svg" alt="" class="adminItem">
+                <img src="/Images/avatar9.svg" alt="" class="adminItem">
+
+            </div>
+        </div>
+
+
+    </div>
+
+</div>

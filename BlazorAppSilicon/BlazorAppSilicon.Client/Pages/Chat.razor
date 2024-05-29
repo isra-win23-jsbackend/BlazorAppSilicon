@@ -1,0 +1,112 @@
+﻿@page "/chat"
+@inject HttpClient Http
+
+@rendermode InteractiveAuto
+
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<PageTitle>Learsi Chat</PageTitle>
+
+<div class="container">  
+ 
+    <div class="col">
+        <div class="card">
+            <div class="card-header">Blazor SignalR Chat</div>
+            <div class="card-body">
+                <ul>
+                    @foreach(var message in messages)
+                    {
+                        <li class="mb-3 list-group-item @(message.UserName == userName ? "chat-bubble-right" : "chat-bubble-left") ">
+                            <div>
+                                <strong>@message.UserName</strong><span>@message.Created.ToString("HH:MM")</span>
+                                <div>@message.Message</div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <div class="mt3" style="height:20px;">
+                    @if (!string.IsNullOrEmpty(typingUser))
+                    {
+                        <div>@typingUser is typing <span class="typing-indicator">...</span></div>
+                    }
+                </div>
+            </div>
+            <div class="card-footer">
+                <div>
+                    <textarea class="form-control" placeholder="Message" @bind="currentMessage" @oninput="NotifyTyping"></textarea>
+                </div>
+                <div class="col-2 my-3">
+                    <button class="btn btn-success w-10" @onclick="Send">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private HubConnection? connection;
+    private bool isConnected => connection?.State == HubConnectionState.Connected;
+    private string? userName;
+    private string? typingUser;
+    private System.Timers.Timer? TypingTimer;
+
+
+    private List<ChatMessage> messages = new();
+    private string? currentMessage;
+
+    private class ChatMessage
+    {
+        public string? Message { get; set; }
+        public string? UserName { get; set; }
+        public DateTime Created { get; set; } = DateTime.Now;
+    }
+
+    private async Task NotifyTyping() => await connection!.SendAsync("Typing", userName);
+
+
+    private async Task Send()
+    {
+        if (!string.IsNullOrEmpty(currentMessage))
+        {
+            var message = new ChatMessage{UserName = userName,Message = currentMessage};
+            messages.Add(message);
+            await connection!.SendAsync("SendMessageToAll", message.UserName, message.Message, message.Created);
+
+            currentMessage = "";
+        }
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated ?? false)
+            userName = user.Identity.Name;
+        else
+            userName = "Anonimous";
+
+        connection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
+
+        connection.On<string>("UserTyping", (typingUserName) =>
+        {
+            typingUser = typingUserName;
+            InvokeAsync(StateHasChanged);
+
+            TypingTimer?.Stop();
+            TypingTimer = new System.Timers.Timer(2000);
+            TypingTimer.Elapsed += (s, e) =>
+            {
+                typingUser = null;
+                InvokeAsync(StateHasChanged);
+            };
+            TypingTimer.Start();
+        });
+
+        await connection.StartAsync();
+    }
+}

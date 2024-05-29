@@ -1,0 +1,215 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using BlazorAppSilicon.Services
+@using Microsoft.AspNetCore.Identity
+@using BlazorAppSilicon.Data
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager RedirectManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Profile</PageTitle>
+
+<h3>Profile</h3>
+<StatusMessage />
+
+@if (user == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div>
+        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="klientInfo">
+                <div class="klientDetails">
+                    <label><b>First name</b></label>
+                    <InputText @bind-Value="Input.FirstName" placeholder="Enter your first name" />
+                    <ValidationMessage For="@(() => Input.FirstName)" />
+                </div>
+                <div class="klientDetails">
+                    <label><b>Last name</b></label>
+                    <InputText @bind-Value="Input.LastName" placeholder="Enter your last name" />
+                    <ValidationMessage For="@(() => Input.LastName)" />
+                </div>
+            </div>
+            <div class="klientDetails">
+                <InputText @bind-Value="Input.Phone" class="form-control" placeholder="Please enter your phone number." />
+                <label for="phone-number" class="form-label">Phone number</label>
+                <ValidationMessage For="@(() => Input.Phone)" class="text-danger" />
+            </div>
+            <div class="textOptional">
+                <label><b>Bio</b> (optional)</label>
+                <InputTextArea @bind-Value="Input.Bio" cols="10" rows="2" placeholder="Add a short bio" />
+            </div>
+            <div class="acountbutton">
+                <button class="btn-gray" type="reset">Cancel</button>
+                <button type="submit" class="btn-theme-s">Save changes</button>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private ApplicationUser? user;
+    private string? phoneNumber;
+
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            user = await UserManager.GetUserAsync(authState.User);
+            if (user != null)
+            {
+                phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+
+                Input.FirstName = user.FirstName;
+                Input.LastName = user.LastName;
+                Input.Email = user.Email ?? string.Empty;
+                Input.Phone = phoneNumber ?? string.Empty;
+                Input.Bio = user.Biography?? string.Empty;
+            }
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (user == null)
+        {
+            RedirectManager.NavigateTo("/error");
+            return;
+        }
+
+        if (Input.Phone != phoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.Phone);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.NavigateTo("/error?message=Failed to set phone number.");
+                return;
+            }
+        }
+
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        user.Biography = Input.Bio;
+
+        var updateResult = await UserManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+        {
+            RedirectManager.NavigateTo("/error?message=Failed to update user profile.");
+            return;
+        }
+
+        RedirectManager.NavigateTo("/profile?status=updated");
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+        [Required]
+        [Phone]
+        public string Phone { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
+    }
+}
+
+
+
+@* <h3>Profile</h3>
+<StatusMessage />
+
+<div >
+  
+        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="klientInfo">
+                <div class="klientDetails">
+                    <label><b>First name</b></label>
+                    <InputText @bind-Value="Input.FirstName" placeholder="Enter your first name" />
+                    <ValidationMessage For="@(() => Input.FirstName)" />
+                </div>
+                <div class="klientDetails">
+                    <label><b>Last name</b></label>
+                    <InputText @bind-Value="Input.LastName" placeholder="Enter your last name" />
+                    <ValidationMessage For="@(() => Input.LastName)" />
+                </div>
+            </div>
+            <div class="klientDetails">
+                <InputText @bind-Value="Input.Phone" class="form-control" placeholder="Please enter your phone number." />
+                <label for="phone-number" class="form-label">Phone number</label>
+                <ValidationMessage For="() => Input.Phone" class="text-danger" />
+            </div>
+            <div class="textOptional">
+                <label><b>Bio</b> (optional)</label>
+                <InputTextArea @bind-Value="Input.Bio" cols="10" rows="2" placeholder="Add a short bio" />
+            </div>
+             <div class="acountbutton">
+                <button class="btn-gray" type="reset">Cancel</button>
+                <button type="submit" class="btn-theme-s">Save changes</button>
+             </div>
+        </EditForm>
+    
+</div>
+
+@code {
+    private ApplicationUser user = default!;
+    private string? username;
+    private string? phoneNumber;
+
+
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        username = await UserManager.GetUserNameAsync(user);
+        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+
+        Input.Phone ??= phoneNumber!;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (Input.Phone != phoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.Phone);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            }
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        public string FirstName { get; set; } = null!;
+        [Required]
+        public string LastName { get; set; } = null!;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = null!;
+        [Required]
+        [Phone]
+        public string Phone { get; set; } = null!;
+        public string Bio { get; set; } = null!;
+    }
+}
+ *@

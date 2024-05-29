@@ -1,0 +1,25 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using BlazorAppSilicon.Components.Account
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using BlazorAppSilicon
+@using BlazorAppSilicon.Client
+@using BlazorAppSilicon.Components
+@using Microsoft.AspNetCore.Authorization
+@using BlazorAppSilicon.Data
+@using Microsoft.AspNetCore.Identity
+@using BlazorAppSilicon.Components.Layout
+@using BlazorAppSilicon.Components.Account.Shared
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject HttpClient Http
+
