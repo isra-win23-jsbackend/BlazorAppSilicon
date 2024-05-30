@@ -18,25 +18,23 @@
         <div class="createNewSecurity">
             <h5 class="colorTitle">Change Password</h5>
             <CascadingValue Value="@UserAccessor">
-                <EditForm Model="changePasswordInput" OnValidSubmit="OnChangePasswordValidSubmitAsync">
+                <!-- Formulario para cambiar la contraseña -->
+                <EditForm Model="changePasswordInput" OnValidSubmit="OnChangePasswordValidSubmitAsync" FormName="changePasswordForm">
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger" />
                     <div class="clienSecurity">
                         <div class="oldPassword">
                             <InputText type="password" @bind-Value="changePasswordInput.OldPassword" class="input" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
-                            <label for="old-password" class="form-label">Current Password</label>
                             <ValidationMessage For="@(() => changePasswordInput.OldPassword)" class="text-danger" />
                         </div>
                     </div>
                     <div class="clientInfo">
                         <div class="clienSecurity">
                             <InputText type="password" @bind-Value="changePasswordInput.NewPassword" class="input" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
-                            <label for="new-password" class="form-label">New password</label>
                             <ValidationMessage For="@(() => changePasswordInput.NewPassword)" class="text-danger" />
                         </div>
                         <div class="clienSecurity">
                             <InputText type="password" @bind-Value="changePasswordInput.ConfirmPassword" class="input" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
-                            <label for="confirm-password" class="form-label">Confirm New Password</label>
                             <ValidationMessage For="@(() => changePasswordInput.ConfirmPassword)" class="text-danger" />
                         </div>
                     </div>
@@ -53,15 +51,23 @@
                 <strong>When you delete your account, your public profile will be deactivated immediately. If you change your mind before the 14 days are up, sign in with your email and password, and we’ll send you a link to reactivate your account.</strong>
             </p>
         </div>
-        <EditForm Model="deleteInput" FormName="delete-user" OnValidSubmit="OnValidDeleteSubmitAsync" method="post">
+        <!-- Formulario para eliminar la cuenta -->
+        <EditForm Model="deleteInput" OnValidSubmit="OnValidDeleteSubmitAsync" FormName="deleteUserForm" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
 
             <div class="form-check mb-3">
                 <InputCheckbox @bind-Value="deleteInput.ConfirmDelete" class="form-check-input" id="confirmDelete" />
                 <label for="confirmDelete" class="form-check-label">Yes, I want to delete my account.</label>
-                <ValidationMessage For="() => deleteInput.ConfirmDelete" class="text-danger" />
+                <ValidationMessage For="@(() => deleteInput.ConfirmDelete)" class="text-danger" />
             </div>
+
+            @if (!string.IsNullOrEmpty(deleteMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @deleteMessage
+                </div>
+            }
 
             <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
         </EditForm>
@@ -93,7 +99,7 @@
         var changePasswordResult = await UserManager.ChangePasswordAsync(user, changePasswordInput.OldPassword, changePasswordInput.NewPassword);
         if (!changePasswordResult.Succeeded)
         {
-            // Handle password change failure
+            Logger.LogError("Error: User cannot change their password successfully");
             return;
         }
 
@@ -104,6 +110,8 @@
 
     private async Task OnValidDeleteSubmitAsync()
     {
+        deleteMessage = string.Empty;
+
         if (!deleteInput.ConfirmDelete)
         {
             deleteMessage = "Error: You must confirm account deletion.";
@@ -113,7 +121,8 @@
         var result = await UserManager.DeleteAsync(user);
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException("Unexpected error occurred deleting user.");
+            deleteMessage = "Unexpected error occurred deleting user.";
+            return;
         }
 
         await SignInManager.SignOutAsync();
@@ -121,7 +130,7 @@
         var userId = await UserManager.GetUserIdAsync(user);
         Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
 
-        RedirectManager.RedirectToCurrentPage();
+        RedirectManager.RedirectTo("/");
     }
 
     public class ChangePasswordInputModel
@@ -153,21 +162,19 @@
 
 
 
-@* @page "/Account/Manage/Security"
 
+
+
+@* @page "/Account/Manage/Security"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
-
+@using BlazorAppSilicon.Data
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
-
-
 @inject ILogger<Security> Logger
 
 <PageTitle>Security</PageTitle>
-
-
 
 <div class="container details">
     <ManageNavMenu />
@@ -178,21 +185,151 @@
         <div class="createNewSecurity">
             <h5 class="colorTitle">Change Password</h5>
             <CascadingValue Value="@UserAccessor">
-                <BlazorAppSilicon.Components.Account.Pages.Manage.ChangePassword />
+                <EditForm Model="changePasswordInput" OnValidSubmit="OnChangePasswordValidSubmitAsync" FormName="changePasswordForm">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+                    <div class="clienSecurity">
+                        <div class="oldPassword">
+                            <InputText type="password" @bind-Value="changePasswordInput.OldPassword" class="input" autocomplete="current-password" aria-required="true" placeholder="Please enter your old password." />
+                         @*    <label for="old-password" class="form-label">Current Password</label> *@
+                     @*        <ValidationMessage For="@(() => changePasswordInput.OldPassword)" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="clientInfo">
+                        <div class="clienSecurity">
+                            <InputText type="password" @bind-Value="changePasswordInput.NewPassword" class="input" autocomplete="new-password" aria-required="true" placeholder="Please enter your new password." />
+                        @*     <label for="new-password" class="form-label">New password</label> *@
+                           @*  <ValidationMessage For="@(() => changePasswordInput.NewPassword)" class="text-danger" /> *@
+                      @*   </div>
+                        <div class="clienSecurity">
+                            <InputText type="password" @bind-Value="changePasswordInput.ConfirmPassword" class="input" autocomplete="new-password" aria-required="true" placeholder="Please confirm your new password." />
+                          @*   <label for="confirm-password" class="form-label">Confirm New Password</label> *@ 
+                 @*            <ValidationMessage For="@(() => changePasswordInput.ConfirmPassword)" class="text-danger" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-theme">Save Changes</button>
+                </EditForm>
             </CascadingValue>
-            
         </div>
 
-        <hr>     
-                 
-         <BlazorAppSilicon.Components.Account.Pages.Manage.DeletePersonalData />
-        
-           
-       
+        <hr>
+
+        <h5 class="colorTitle">Delete Account</h5>
+        <div class="text-m" role="alert">
+            <p>
+                <strong>When you delete your account, your public profile will be deactivated immediately. If you change your mind before the 14 days are up, sign in with your email and password, and we’ll send you a link to reactivate your account.</strong>
+            </p>
+        </div>
+        <EditForm Model="deleteInput" FormName="delete-user" OnValidSubmit="OnValidDeleteSubmitAsync" method="post">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" /> *@
+@* 
+            <div class="form-check mb-3">
+                <InputCheckbox @bind-Value="deleteInput.ConfirmDelete" class="form-check-input" id="confirmDelete" />
+                <label for="confirmDelete" class="form-check-label">Yes, I want to delete my account.</label>
+                <ValidationMessage For="() => deleteInput.ConfirmDelete" class="text-danger" />
+            </div>
+            @if (!deleteInput.ConfirmDelete)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @deleteMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(deleteMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @deleteMessage
+                </div>
+            }
+
+            <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
+        </EditForm>
     </div>
 </div>
 
+@code {
+    private ApplicationUser user = new ApplicationUser();
+    private bool hasPassword;
+    private ChangePasswordInputModel changePasswordInput = new ChangePasswordInputModel();
+    private DeleteInputModel deleteInput = new DeleteInputModel();
+    private string? deleteMessage;
 
-@code{
-  
-} *@
+    [CascadingParameter]
+    private HttpContext _http { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserAccessor.GetRequiredUserAsync(_http);
+        hasPassword = await UserManager.HasPasswordAsync(user);
+        if (!hasPassword)
+        {
+            RedirectManager.RedirectTo("Account/Manage/SetPassword");
+        }
+    }
+
+    private async Task OnChangePasswordValidSubmitAsync()
+    {
+        var changePasswordResult = await UserManager.ChangePasswordAsync(user, changePasswordInput.OldPassword, changePasswordInput.NewPassword);
+        if (!changePasswordResult.Succeeded)
+        {
+            Logger.LogError("Error: User cannot change their password successfully");
+            return;
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        Logger.LogInformation("User changed their password successfully.");
+        RedirectManager.RedirectToCurrentPageWithStatus("Your password has been changed", _http);
+    }
+
+    private async Task OnValidDeleteSubmitAsync()
+    {
+        if (!deleteInput.ConfirmDelete)
+        {
+            deleteMessage = "Error: You must confirm account deletion.";
+            return;
+        }
+
+        var result = await UserManager.DeleteAsync(user);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException("Unexpected error occurred deleting user.");
+        }
+
+        await SignInManager.SignOutAsync();
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+
+        RedirectManager.RedirectTo("/"); *@
+
+   @*      // RedirectManager.RedirectToCurrentPage(); *@
+@*     }
+
+    public class ChangePasswordInputModel
+    {
+        [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Current password")]
+        public string OldPassword { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "New password")]
+        public string NewPassword { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm new password")]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+
+    public class DeleteInputModel
+    {
+        public bool ConfirmDelete { get; set; } = false;
+    }
+}
+
+
+ *@

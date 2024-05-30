@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="..\BlazorAppSilicon.Client\BlazorAppSilicon.Client.csproj" />
 	  <PackageReference Include="Azure.Storage.Blobs" Version="12.20.0" />
+	  <PackageReference Include="GraphQL.Client" Version="6.1.0" />
+	  <PackageReference Include="HotChocolate.AspNetCore" Version="13.9.5" />
 	  <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.4" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.5" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.5" />
@@ -17,6 +19,7 @@
 	  <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.4" />
 	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
 	  <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.5" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4" />
   </ItemGroup>

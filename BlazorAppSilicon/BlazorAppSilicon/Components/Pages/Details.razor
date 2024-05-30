@@ -11,43 +11,47 @@
         <ManageNavMenu />
     </div>
     <div class="infoDetails">
-
-        <EditForm Model="Input" OnValidSubmit="SaveProfileAsync">
+        <EditForm Model="Input" OnValidSubmit="SaveProfileAsync" FormName="profile-form">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
-          
-                    <div class="klientInfo">
-                        <div class="klientDetails">
-                            <label><b>First name</b></label>
-                            <InputText @bind-Value="Input.FirstName" placeholder="Enter your first name" />
-                            <ValidationMessage For="@(() => Input.FirstName)" />
-                        </div>
-                        <div class="klientDetails">
-                            <label><b>Last name</b></label>
-                            <InputText @bind-Value="Input.LastName" placeholder="Enter your last name" />
-                            <ValidationMessage For="@(() => Input.LastName)" />
-                        </div>
-                    </div>
-                   @*  <div class="klientDetails">
-                        <InputText @bind-Value="Input.Phone" class="form-control" placeholder="Please enter your phone number." />
-                        <label for="phone-number" class="form-label">Phone number</label>
-                        <ValidationMessage For="@(() => Input.Phone)" class="text-danger" />
-                    </div> *@
-                    <div class="textOptional">
-                        <label><b>Bio</b> (optional)</label>
-                        <InputTextArea @bind-Value="Input.Bio" cols="10" rows="2" placeholder="Add a short bio" />
-                    </div>
-                    <div class="acountbutton">
-                        <button class="btn-gray" type="reset">Cancel</button>
-                        <button type="submit" class="btn-theme-s">Save changes</button>
-                    </div>
-                </EditForm>
-    
 
-       
-        
+            <div class="klientInfo">
+                <div class="klientDetails">
+                    <label><b>First name</b></label>
+                    <InputText @bind-Value="Input.FirstName" placeholder="Enter your first name" />
+                    <ValidationMessage For="@(() => Input.FirstName)" />
+                </div>
+                <div class="klientDetails">
+                    <label><b>Last name</b></label>
+                    <InputText @bind-Value="Input.LastName" placeholder="Enter your last name" />
+                    <ValidationMessage For="@(() => Input.LastName)" />
+                </div>
+            </div>
 
-        <EditForm Model="@addressModel" OnValidSubmit="OnValidSubmitAsync">
+            <div class="klientInfo">
+                <div class="klientDetails">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText @bind-Value="Input.Email" class="form-control" placeholder="Please enter your email." />
+                    <ValidationMessage For="@(() => Input.Email)" class="text-danger" />
+                </div>
+                <div class="klientDetails">
+                    <label for="phone-number" class="form-label">Phone number</label>
+                    <InputText @bind-Value="Input.Phone" class="form-control" placeholder="Please enter your phone number." />
+                    <ValidationMessage For="@(() => Input.Phone)" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="textOptional">
+                <label><b>Bio</b> (optional)</label>
+                <InputTextArea @bind-Value="Input.Bio" cols="10" rows="2" placeholder="Add a short bio" />
+            </div>
+            <div class="acountbutton">
+                <button class="btn-gray" type="reset">Cancel</button>
+                <button type="submit" class="btn-theme-s">Save changes</button>
+            </div>
+        </EditForm>
+
+        <EditForm Model="@addressModel" OnValidSubmit="OnValidSubmitAsync" FormName="address-form">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -82,7 +86,6 @@
                 <button id="btn-address-submit" type="submit" class="btn-theme">Save Changes</button>
             </div>
         </EditForm>
-
     </div>
 </div>
 
@@ -90,6 +93,14 @@
     private AddressModel addressModel = new AddressModel();
     private ApplicationUser user = default!;
     private InputModel Input { get; set; } = new();
+    private string? message;
+
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private ILogger<Details> Logger { get; set; } = default!;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -111,6 +122,7 @@
         Input.FirstName = user.FirstName;
         Input.LastName = user.LastName;
         Input.Email = user.Email ?? string.Empty;
+        Input.Phone = user.PhoneNumber ?? string.Empty;
         Input.Bio = user.Biography ?? string.Empty;
     }
 
@@ -127,30 +139,45 @@
         user.Address.City = addressModel.City;
 
         var result = await UserManager.UpdateAsync(user);
-        if (!result.Succeeded)
+        if (result.Succeeded)
         {
-            // Handle error
-            return;
+            await SignInManager.RefreshSignInAsync(user);
+            Logger.LogInformation("User address updated successfully.");
+            Navigation.NavigateTo("account/details");
         }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                Logger.LogError("Error updating user address: {ErrorDescription}", error.Description);
+            }
 
-        // Success, handle redirect or display message
+            message = "There was an error updating your address. Please try again.";
+        }
     }
 
     private async Task SaveProfileAsync()
     {
-        // Update user properties with edited values
         user.FirstName = Input.FirstName;
         user.LastName = Input.LastName;
+        user.PhoneNumber = Input.Phone;
         user.Biography = Input.Bio;
 
         var updateResult = await UserManager.UpdateAsync(user);
         if (updateResult.Succeeded)
         {
-            // Success, handle redirect or display message
+            await SignInManager.RefreshSignInAsync(user);
+            Logger.LogInformation("User profile updated successfully.");
+            Navigation.NavigateTo("account/details");
         }
         else
         {
-            // Handle error
+            foreach (var error in updateResult.Errors)
+            {
+                Logger.LogError("Error updating user profile: {ErrorDescription}", error.Description);
+            }
+
+            message = "There was an error updating your profile. Please try again.";
         }
     }
 
@@ -171,152 +198,11 @@
         public string FirstName { get; set; } = string.Empty;
         [Required]
         public string LastName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@* @page "/account/details"
-@using System.ComponentModel.DataAnnotations
-@using BlazorAppSilicon.Components.Account
-@using BlazorAppSilicon.Data
-@using BlazorAppSilicon.Data.Entities
-
-
-<PageTitle>Profile</PageTitle>
-
-<div class="details container">
-    <div class="profile">
-        <ManageNavMenu />
-    </div>
-    <div class="infoDetails">
-
-        <BlazorAppSilicon.Components.Account.Pages.Manage.Index />
-      
-    <hr />
-    <EditForm Model="@addressModel">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <h5 class="colorTitle">Address</h5>
-        
-             <div class="addresCity">
-                <label><b>Address line 1</b></label>
-                <InputText @bind-Value="addressModel.Address1" placeholder="Enter your address line" />
-                <ValidationMessage For="@(() => addressModel.Address1)" />
-             </div>
-
-
-            <div class="class="addresCity">
-                <label><b>Address line 2</b> (optional)</label>
-                <InputText @bind-Value="addressModel.Address2" placeholder="Enter your address line" />
-                <ValidationMessage For="@(() => addressModel.Address2)" />
-            </div>
-       
-
-        <div class="postalcode">
-            <div class="addresCity">
-                <label><b>Postal Code</b></label>
-                <InputText @bind-Value="addressModel.PostalCode" placeholder="Enter your postal code" />
-                <ValidationMessage For="@(() => addressModel.PostalCode)" />
-            </div>
-            <div class="addressCity">
-                <label><b>City</b></label>
-                <InputText @bind-Value="addressModel.City" placeholder="Enter your city" />
-                <ValidationMessage For="@(() => addressModel.City)" />
-            </div>
-        </div>
-        <div class="acountbutton">
-            <button id="btn-address-reset" type="reset" class="btn-gray">Cancel</button>
-            <button id="btn-address-submit" type="submit" class="btn-theme">Save Changes</button>
-        </div>
-    </EditForm>
-    </div>
-</div>
-
-@code {
-    private AddressModel addressModel = new AddressModel();
-    private ApplicationUser user = default!;
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
-    protected override async Task OnInitializedAsync()
-    {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        if (user.Address != null)
-        {
-            addressModel = new AddressModel
-                {
-                    Address1 = user.Address.AddressLine_1,
-                    Address2 = user.Address.AddressLine_2?? "",
-                    PostalCode = user.Address.PostalCode,
-                    City = user.Address.City
-                };
-        }
-    }
-
-    private async Task OnValidSubmitAsync()
-    {
-        if (user.Address == null)
-        {
-            user.Address = new AddressEntity();
-        }
-
-        user.Address.AddressLine_1 = addressModel.Address1;
-        user.Address.AddressLine_2 = addressModel.Address2;
-        user.Address.PostalCode = addressModel.PostalCode;
-        user.Address.City = addressModel.City;
-
-        var result = await UserManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to update address.", HttpContext);
-            return;
-        }
-
-        RedirectManager.RedirectToCurrentPageWithStatus("Your address has been updated", HttpContext);
-    }
-
-    public class AddressModel
-    {
-        [Required]
-        public string Address1 { get; set; } = null!;
-        public string Address2 { get; set; } = "";
-        [Required]
-        public string PostalCode { get; set; } = null!;
-        [Required]
-        public string City { get; set; } = null!;
-    }
-}
-
- *@
